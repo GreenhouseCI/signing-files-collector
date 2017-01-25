@@ -1,10 +1,10 @@
 require 'fileutils'
 require "logger"
 
-require "collector_errors"
-require 'utils'
+require "./collector_errors.rb"
+require './utils.rb'
 
-load_or_install_gem('zipruby')
+load_or_install_gem('rubyzip')
 
 $LOG_FILE_NAMAE = "signing_files_collector.log"
 
@@ -27,6 +27,7 @@ class SigningFilesCollector
       #@provisioning_profiles =
       #TODO
       #@codesigning_identities =
+      raise CollectorError
 
     rescue CollectorError
       puts "Signing file collection failed. Aborting"
