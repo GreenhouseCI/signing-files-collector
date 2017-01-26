@@ -1,11 +1,14 @@
+require "./provisioning_profile.rb"
+
 class ProvisioningProfileCollector
   @@PROVISIONING_PROFILE_DIR = "#{Dir.home}/Library/MobileDevice/Provisioning Profiles"
   @@PROVISIONING_PROFILE_PATTERN = "*.mobileprovision"
 
-  def initialize; end
-
   def collect
     profile_path = find_provisioning_profiles
+    profiles = profile_path.map {|path| ProvisioningProfile.new(path)}
+    #TODO profiles = [profile for profile in profiles if not profile.is_expired]
+    profiles
   end
 
   private
@@ -14,7 +17,8 @@ class ProvisioningProfileCollector
     $file_logger.info "Searching for provisioning profiles in #{@@PROVISIONING_PROFILE_DIR}"
     matches = Array.new
     begin
-      Dir.glob["#{PROVISIONING_PROFILE_DIR}/**/*.#{@@PROVISIONING_PROFILE_PATTERN}"].each { |filename|
+      puts "#{@@PROVISIONING_PROFILE_DIR}/**/#{@@PROVISIONING_PROFILE_PATTERN}"
+      Dir.glob("#{@@PROVISIONING_PROFILE_DIR}/**/#{@@PROVISIONING_PROFILE_PATTERN}").each { |filename|
         matches.push filename
       }
     rescue StandardError => err

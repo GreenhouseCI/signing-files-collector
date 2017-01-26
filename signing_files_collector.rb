@@ -3,6 +3,7 @@ require "logger"
 require "open3"
 require "set"
 
+require "./codesigning_identities_collector.rb"
 require "./collector_errors.rb"
 require "./provisioning_profile_collector.rb"
 require "./utils.rb"
@@ -28,7 +29,7 @@ class SigningFilesCollector
       create_temp_dir
       @provisioning_profiles = ProvisioningProfileCollector.new().collect
       #TODO
-      #@codesigning_identities =
+      @codesigning_identities = CodesigningIdentitiesCollector.new().collect @package_dir
       discard_unreferenced
       create_upload_package
       add_log_to_upload_package

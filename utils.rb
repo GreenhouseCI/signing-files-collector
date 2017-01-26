@@ -2,7 +2,8 @@ require 'rubygems'
 
 NAME_TO_GEM_MAP = {
     "zip" => "rubyzip",
-    "keychain" => "ruby-keychain"
+    "keychain" => "ruby-keychain",
+    "plist" => "plist"
 }
 
 def load_or_install_gem(name)

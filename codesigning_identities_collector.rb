@@ -104,14 +104,14 @@ class CodesigningIdentity
 end
 
 
-log_file_path = ARGV[0]
-temp_dir = ARGV[1]
-
-log_file = File.open log_file_path, "a"
-$file_logger = Logger.new log_file
-$file_logger.level = Logger::DEBUG
-$file_logger.formatter = proc { |severity, datetime, progname, msg| "#{severity} #{caller[4]} #{msg}\n" }
-$stdout_logger = Logger.new STDOUT
-$stdout_logger.level = Logger::INFO
-
-CodesigningIdentitiesCollector.new().collect temp_dir
+# log_file_path = ARGV[0]
+# temp_dir = ARGV[1]
+#
+# log_file = File.open log_file_path, "a"
+# $file_logger = Logger.new log_file
+# $file_logger.level = Logger::DEBUG
+# $file_logger.formatter = proc { |severity, datetime, progname, msg| "#{severity} #{caller[4]} #{msg}\n" }
+# $stdout_logger = Logger.new STDOUT
+# $stdout_logger.level = Logger::INFO
+#
+# CodesigningIdentitiesCollector.new().collect temp_dir
