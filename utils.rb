@@ -1,13 +1,18 @@
 require 'rubygems'
 
-def load_or_install_gem(gem_name)
+NAME_TO_GEM_MAP = {
+    "zip" => "rubyzip",
+    "keychain" => "ruby-keychain"
+}
+
+def load_or_install_gem(name)
   begin
-    require gem_name
+    eval "require '#{name}'"
   rescue  LoadError => e
     puts "exception .. installing with gem"
-    h = system "gem install '#{gem_name}'"
+    h = system "gem install #{NAME_TO_GEM_MAP[name]}"
     puts "gem installed #{h}"
     Gem.clear_paths
-    require gem_name
+    eval "require '#{name}'"
   end
 end
