@@ -7,7 +7,7 @@ class ProvisioningProfileCollector
   def collect
     profile_path = find_provisioning_profiles
     profiles = profile_path.map {|path| ProvisioningProfile.new(path)}
-    #TODO profiles = [profile for profile in profiles if not profile.is_expired]
+    profiles = profiles.select{|x| not x.is_expired}
     profiles
   end
 

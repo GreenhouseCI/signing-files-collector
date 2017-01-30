@@ -28,8 +28,7 @@ class SigningFilesCollector
       $file_logger.info "Preparing to collect iOS signing files"
       create_temp_dir
       @provisioning_profiles = ProvisioningProfileCollector.new().collect
-      #TODO
-      @codesigning_identities = CodesigningIdentitiesCollector.new().collect @package_dir
+      @codesigning_identities = CodesigningIdentitiesCollector.new().collect
       discard_unreferenced
       create_upload_package
       add_log_to_upload_package
@@ -83,11 +82,11 @@ private
       }
     }
     @provisioning_profiles = referenced_provisioning_profiles.to_a
-    @codesigning_identities.each { |csid|
-      if not referenced_codesigning_ids.include? csid
-        csid.remove
-      end
-    }
+    # @codesigning_identities.each { |csid|
+    #   if not referenced_codesigning_ids.include? csid
+    #     csid.remove
+    #   end
+    # }
     @codesigning_identities = referenced_codesigning_ids.to_a
   end
 
