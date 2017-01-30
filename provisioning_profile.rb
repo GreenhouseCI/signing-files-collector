@@ -1,3 +1,6 @@
+require 'date'
+require 'time'
+
 load_or_install_gem("plist")
 
 class ProvisioningProfile
@@ -27,6 +30,48 @@ class ProvisioningProfile
   end
 
   def is_expired
+    profile_data = read
+    profile_expires_on = profile_data["ExpirationDate"]
+    if not (profile_expires_on.nil? and profile_expires_on.instance_of?(DateTime))
+      $file_logger.error "Failed to parse expiry date from provisioning profile #{@file_path}"
+      raise CollectorError
+    end
 
+    expired = profile_expires_on <= DateTime.now
+    message = expired ? "expired" : "valid"
+    $file_logger.info "Provisioning profile #{@file_path} is #{message}"
+    expired
   end
+
+  def serials
+    return @serials if @serials.any?
+
+    profile_data = read
+    certificates = profile_data["DeveloperCertificates"]
+    if not (certificates.nil? and certificates.instance_of?(Array))
+      $file_logger.error "Failed to parse certificates from provisioning profile #{@file_path}"
+      raise CollectorError
+    end
+
+    serials = Array.new
+
+    certificates.each { |cert|
+      certificate = OpenSSL::X509::Certificate.new(cert.read)
+      serials.push certificate.serial
+    }
+    @serials = serials
+    serials
+  end
+
+  def create_symlink temp_dir
+    begin
+      symlink_path = File.join temp_dir, File.basename(@file_path)
+      $file_logger.debug "Create symlink #{symlink_path} for provisioning profile #{@file_path}"
+      FileUtils.symlink @file_path, symlink_path
+    rescue StandardError => err
+      $file_logger.error "Failed to prepare provisioning profile for packaging: #{err.message}"
+      raise CollectorError
+    end
+  end
+
 end
