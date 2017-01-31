@@ -9,7 +9,6 @@ class CodesigningIdentitiesCollector
     unlock_default_keychain
     signing_identities = read_ids_from_keychain
     signing_identities
-    # export_signing_identities_to_files_in
   end
 
   private

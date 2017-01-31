@@ -6,9 +6,6 @@ require "set"
 require "./codesigning_identities_collector.rb"
 require "./collector_errors.rb"
 require "./provisioning_profile_collector.rb"
-require "./utils.rb"
-
-load_or_install_gem("keychain")
 
 $LOG_FILE_NAME = "signing_files_collector.log"
 
@@ -53,8 +50,7 @@ class SigningFilesCollector
         $stdout_logger.info "Please attach it when opening a support ticket"
       end
     ensure
-      # remove_package_dir
-      #TODO remove log
+      remove_package_dir
     end
   end
 
@@ -115,17 +111,18 @@ private
       begin
         Open3.popen3(*cmd) do |stdin, stdout, stderr, wait_thr|
           exit_status = wait_thr.value
-          $file_logger.debug "Exit status: #{exit_status}"
-          $file_logger.debug "STDOUT: #{stdout.read}"
-          raise CollectorError(stderr.read) unless exit_status.success?
+          if not exit_status.success?
+            $file_logger.error "Error while creating upload package: #{stderr.read}"
+            raise CollectorError
+          end
         end
       rescue StandardError => err
-        $file_logger.error "Faild to prepare upload package: #{err.message}"
+        $file_logger.error "Faild to run popen command while preparing upload package: #{err.message}"
         raise CollectorError
       end
 
-    rescue Exception => e
-      $file_logger.error "Failed to prepare upload package: #{e.message}"
+    rescue StandardError => err
+      $file_logger.error "Failed to prepare upload package: #{err.message}"
       raise CollectorError
     end
   end
@@ -150,12 +147,13 @@ private
       begin
         Open3.popen3(*cmd) do |stdin, stdout, stderr, wait_thr|
           exit_status = wait_thr.value
-          $file_logger.debug "Exit status: #{exit_status}"
-          $file_logger.debug "STDOUT: #{stdout.read}"
-          raise CollectorError(stderr.read) unless exit_status.success?
+          if not exit_status.success?
+            $file_logger.error "Error while adding log file to upload package: #{stderr.read}"
+            raise CollectorError
+          end
         end
       rescue StandardError => err
-        $file_logger.error "Faild to add log file to package: #{err.message}"
+        $file_logger.error "Faild to run popen to add log file to package: #{err.message}"
         raise CollectorError
       end
 
@@ -188,6 +186,7 @@ private
   end
 end
 
+UPLOAD_KEY = ARGV[0]
 
 File.delete($LOG_FILE_NAME) if File.exist?($LOG_FILE_NAME)
 

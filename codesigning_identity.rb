@@ -1,17 +1,3 @@
-# class CodesigningIdentity
-#   @@IPHONE_DEVELOPER_DESCRIPTOR = "iPhone Developer"
-#   @@IPHONE_DISTRIBUTION_DESCRIPTOR = "iPhone Distribution"
-#
-#   def initialize(path)
-#     @file_path = path
-#     @serial = String.new
-#   end
-#
-#   def is_iphone_cert
-#     $file_logger.debug "Verifying type of #{@file_path}"
-#   end
-# end
-require 'logger'
 class CodesigningIdentity
   IPHONE_DEVELOPER_DESCRIPTOR = "iPhone Developer"
   IPHONE_DISTRIBUTION_DESCRIPTOR = "iPhone Distribution"
@@ -23,21 +9,21 @@ class CodesigningIdentity
     @serial = nil
   end
 
-  def useful?
-    is_iphone_type = iphone_type?
-    is_not_expired = not_expired?
-    $stdout_logger.info "#{ref} is #{is_iphone_type ? "" : " not "} suitable for iOS codesigning"
-    $stdout_logger.info "#{ref} is #{is_not_expired ? "" : " not "} expired"
-    return iphone_type? && not_expired?
-  end
-
-  def iphone_type?
-    $file_logger.debug "Processing certificate with subject #{ref}"
-    is_iphone_developer = !!(ref =~ /#{IPHONE_DEVELOPER_DESCRIPTOR}/)
-    is_iphone_distribution = !!(ref =~ /#{IPHONE_DISTRIBUTION_DESCRIPTOR}/)
-    $file_logger.debug "Developer - #{is_iphone_developer}; Distribution - #{is_iphone_distribution}"
-    is_iphone_developer || is_iphone_distribution
-  end
+  # def useful?
+  #   is_iphone_type = iphone_type?
+  #   is_not_expired = not_expired?
+  #   $stdout_logger.info "#{ref} is #{is_iphone_type ? "" : " not "} suitable for iOS codesigning"
+  #   $stdout_logger.info "#{ref} is #{is_not_expired ? "" : " not "} expired"
+  #   return iphone_type? && not_expired?
+  # end
+  #
+  # def iphone_type?
+  #   $file_logger.debug "Processing certificate with subject #{ref}"
+  #   is_iphone_developer = !!(ref =~ /#{IPHONE_DEVELOPER_DESCRIPTOR}/)
+  #   is_iphone_distribution = !!(ref =~ /#{IPHONE_DISTRIBUTION_DESCRIPTOR}/)
+  #   $file_logger.debug "Developer - #{is_iphone_developer}; Distribution - #{is_iphone_distribution}"
+  #   is_iphone_developer || is_iphone_distribution
+  # end
 
   def not_expired?
     return (Time.now >= cert.not_before) && (Time.now < cert.not_after)

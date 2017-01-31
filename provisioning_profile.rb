@@ -1,9 +1,7 @@
 require 'date'
 require 'time'
 
-require './utils.rb'
-
-load_or_install_gem("plist")
+require 'plist'
 
 class ProvisioningProfile
 
