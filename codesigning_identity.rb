@@ -3,36 +3,19 @@ class CodesigningIdentity
   IPHONE_DISTRIBUTION_DESCRIPTOR = "iPhone Distribution"
 
   def initialize(data)
-    self.data = data
-    self.cert = data.certificate.x509
-    self.ref = cert.subject.to_s
+    @data = data
+    @cert = @data.certificate.x509
     @serial = nil
   end
 
-  # def useful?
-  #   is_iphone_type = iphone_type?
-  #   is_not_expired = not_expired?
-  #   $stdout_logger.info "#{ref} is #{is_iphone_type ? "" : " not "} suitable for iOS codesigning"
-  #   $stdout_logger.info "#{ref} is #{is_not_expired ? "" : " not "} expired"
-  #   return iphone_type? && not_expired?
-  # end
-  #
-  # def iphone_type?
-  #   $file_logger.debug "Processing certificate with subject #{ref}"
-  #   is_iphone_developer = !!(ref =~ /#{IPHONE_DEVELOPER_DESCRIPTOR}/)
-  #   is_iphone_distribution = !!(ref =~ /#{IPHONE_DISTRIBUTION_DESCRIPTOR}/)
-  #   $file_logger.debug "Developer - #{is_iphone_developer}; Distribution - #{is_iphone_distribution}"
-  #   is_iphone_developer || is_iphone_distribution
-  # end
-
   def not_expired?
-    return (Time.now >= cert.not_before) && (Time.now < cert.not_after)
+    return (Time.now >= @cert.not_before) && (Time.now < @cert.not_after)
   end
 
   def serial
     return @serial unless @serial.nil?
 
-    @serial = cert.serial
+    @serial = @cert.serial
   end
 
   def export_to_file(dir, file_index)
@@ -45,6 +28,6 @@ class CodesigningIdentity
 
   private
 
-  attr_accessor :data, :cert, :ref
+  attr_accessor :data, :cert
   attr_writer :serial
 end

@@ -2,6 +2,7 @@ require "fileutils"
 require "logger"
 require "open3"
 require "set"
+require "uri"
 
 require "./codesigning_identities_collector.rb"
 require "./collector_errors.rb"
@@ -22,29 +23,23 @@ class SigningFilesCollector
 
   def collect
     begin
-      $file_logger.info "Preparing to collect iOS signing files"
+      log_to_all "Preparing to collect iOS signing files"
       create_temp_dir
       @provisioning_profiles = ProvisioningProfileCollector.new().collect
-      $file_logger.debug "Found provisioning profiles with following serial numbers:"
-      @provisioning_profiles.each { |profile|
-        profile.serials.each { |serial|
-          $file_logger.debug serial
-        }
-      }
       @codesigning_identities = CodesigningIdentitiesCollector.new().collect
-      $file_logger.debug "Found codesigning identities with following serial numbers:"
-      @codesigning_identities.each { |csid|
-        $file_logger.debug csid.serial
-      }
+      log_to_all "Discarding unreferenced signing files"
       discard_unreferenced
+      log_to_all "Creating upload package"
       create_upload_package
+      log_to_all "Adding log file to upload package"
       add_log_to_upload_package
-      #TODO upload package
-      $stdout_logger.info "iOS signing file collection complete"
+      log_to_all "iOS signing file collection complete"
+      log_to_all "Starting to upload package to GH"
+      upload_package
       $stdout_logger.info "Please return to Greenhouse CI UI to continue"
 
     rescue CollectorError
-      puts "Signing file collection failed. Aborting"
+      log_to_all "Signing file collection failed. Aborting"
       if File.exist?(@log_file_path)
         $stdout_logger.info "You can find the debug log at #{@log_file_path}"
         $stdout_logger.info "Please attach it when opening a support ticket"
@@ -75,7 +70,6 @@ private
 
   def discard_unreferenced
     $file_logger.info "Matching provisioning profiles & codesigning identities"
-    #TODO Address Uku's comment about proper logging
     referenced_codesigning_ids = Set.new
     referenced_provisioning_profiles = Set.new
     @provisioning_profiles.each { |profile|
@@ -95,7 +89,13 @@ private
     $file_logger.info "Preparing upload package"
     begin
       create_provisioning_profile_symlink
+      puts "*" * 84
+      puts "Please allow script to access your keychain when prompted, once per matched identity"
+      puts "*" * 84
       export_csids_to_file
+      puts "*" * 84
+      puts "Thank you!"
+      puts "*" * 84
       Dir.chdir @package_dir
       signing_files = Dir.glob "*.mobileprovision"
       signing_files.concat Dir.glob("*.p12")
@@ -163,6 +163,11 @@ private
     end
   end
 
+  def upload_package
+    puts UPLOAD_KEY
+    puts URL
+  end
+
   def remove_package_dir
     $file_logger.info "Cleaning up"
     $file_logger.info "Removing package directory #{@package_dir}"
@@ -186,7 +191,13 @@ private
   end
 end
 
-UPLOAD_KEY = ARGV[0]
+def log_to_all(message, method = :info)
+  $file_logger.send method, message
+  $stdout_logger.send method, message
+end
+
+URL = ARGV[0]
+UPLOAD_KEY = ARGV[1]
 
 File.delete($LOG_FILE_NAME) if File.exist?($LOG_FILE_NAME)
 
@@ -199,5 +210,9 @@ $file_logger.formatter = proc { |severity, datetime, progname, msg|
 }
 $stdout_logger = Logger.new STDOUT
 $stdout_logger.level = Logger::INFO
+$stdout_logger.formatter = proc { |severity, datetime, progname, msg|
+  date_format = datetime.strftime("%Y-%m-%d %H:%M:%S")
+  "#{date_format} #{severity} #{msg}\n"
+}
 
 SigningFilesCollector.new().collect

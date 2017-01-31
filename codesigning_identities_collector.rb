@@ -34,15 +34,4 @@ class CodesigningIdentitiesCollector
     scope.all.map { |csid| CodesigningIdentity.new(csid) }
   end
 
-  # def export_signing_identities_to_files_in
-  #   $file_logger.info "Exporting codesigning identities from keychain"
-  #   puts "*" * 84
-  #   puts "Please allow the script to access your keychain when prompted, once for each identity"
-  #   puts "*" * 84
-  #   signing_identities.each_with_index do |csid, index|
-  #     next unless csid.useful?
-  #
-  #     csid.export_to_file @temp_dir, index
-  #   end
-  # end
 end
