@@ -20,12 +20,7 @@ class CodesigningIdentity
     self.data = data
     self.cert = data.certificate.x509
     self.ref = cert.subject.to_s
-    @serial = String.new
-    #TODO delete it
-    $file_logger = Logger.new STDOUT
-    $file_logger.level = Logger::INFO
-    $stdout_logger = Logger.new STDOUT
-    $stdout_logger.level = Logger::INFO
+    @serial = nil
   end
 
   def useful?
@@ -49,7 +44,7 @@ class CodesigningIdentity
   end
 
   def serial
-    return @serial unless @serial.empty?
+    return @serial unless @serial.nil?
 
     @serial = cert.serial
   end

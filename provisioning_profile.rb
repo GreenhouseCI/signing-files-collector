@@ -1,6 +1,8 @@
 require 'date'
 require 'time'
 
+require './utils.rb'
+
 load_or_install_gem("plist")
 
 class ProvisioningProfile
@@ -32,7 +34,8 @@ class ProvisioningProfile
   def is_expired
     profile_data = read
     profile_expires_on = profile_data["ExpirationDate"]
-    if not (profile_expires_on.nil? and profile_expires_on.instance_of?(DateTime))
+    $file_logger.debug "Profile expires on #{profile_expires_on.strftime("%Y/%m/%d")}"
+    if profile_expires_on.nil? and not profile_expires_on.instance_of?(DateTime)
       $file_logger.error "Failed to parse expiry date from provisioning profile #{@file_path}"
       raise CollectorError
     end
@@ -48,7 +51,7 @@ class ProvisioningProfile
 
     profile_data = read
     certificates = profile_data["DeveloperCertificates"]
-    if not (certificates.nil? and certificates.instance_of?(Array))
+    if certificates.nil? and not certificates.instance_of?(Array)
       $file_logger.error "Failed to parse certificates from provisioning profile #{@file_path}"
       raise CollectorError
     end

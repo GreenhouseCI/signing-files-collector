@@ -28,16 +28,23 @@ class SigningFilesCollector
       $file_logger.info "Preparing to collect iOS signing files"
       create_temp_dir
       @provisioning_profiles = ProvisioningProfileCollector.new().collect
+      $file_logger.debug "Found provisioning profiles with following serial numbers:"
+      @provisioning_profiles.each { |profile|
+        profile.serials.each { |serial|
+          $file_logger.debug serial
+        }
+      }
       @codesigning_identities = CodesigningIdentitiesCollector.new().collect
+      $file_logger.debug "Found codesigning identities with following serial numbers:"
+      @codesigning_identities.each { |csid|
+        $file_logger.debug csid.serial
+      }
       discard_unreferenced
       create_upload_package
       add_log_to_upload_package
       #TODO upload package
-      #TODO remove package dir
-      #TODO remove log
       $stdout_logger.info "iOS signing file collection complete"
-      $stdout_logger.indo "Please return to Greenhouse CI UI to continue"
-      raise CollectorError
+      $stdout_logger.info "Please return to Greenhouse CI UI to continue"
 
     rescue CollectorError
       puts "Signing file collection failed. Aborting"
@@ -46,7 +53,8 @@ class SigningFilesCollector
         $stdout_logger.info "Please attach it when opening a support ticket"
       end
     ensure
-      remove_package_dir
+      # remove_package_dir
+      #TODO remove log
     end
   end
 
@@ -54,7 +62,9 @@ private
 
   def generate_package_dir_name
     timestamp = Time.now.to_i
-    "/tmp/gh_signing_files_#{timestamp}"
+    dir_name = "/tmp/gh_signing_files_#{timestamp}"
+    $file_logger.info "Temporal package directory has been generated at #{dir_name}"
+    dir_name
   end
 
   def create_temp_dir
@@ -82,11 +92,6 @@ private
       }
     }
     @provisioning_profiles = referenced_provisioning_profiles.to_a
-    # @codesigning_identities.each { |csid|
-    #   if not referenced_codesigning_ids.include? csid
-    #     csid.remove
-    #   end
-    # }
     @codesigning_identities = referenced_codesigning_ids.to_a
   end
 
@@ -94,6 +99,7 @@ private
     $file_logger.info "Preparing upload package"
     begin
       create_provisioning_profile_symlink
+      export_csids_to_file
       Dir.chdir @package_dir
       signing_files = Dir.glob "*.mobileprovision"
       signing_files.concat Dir.glob("*.p12")
@@ -105,9 +111,18 @@ private
         raise CollectorError
       end
 
-      signing_files.each { |signing_file|
-        #TODO add file by file to the zip file @@PACKAGE_NAME
-      }
+      cmd = "zip -r #{@@PACKAGE_NAME} ./*"
+      begin
+        Open3.popen3(*cmd) do |stdin, stdout, stderr, wait_thr|
+          exit_status = wait_thr.value
+          $file_logger.debug "Exit status: #{exit_status}"
+          $file_logger.debug "STDOUT: #{stdout.read}"
+          raise CollectorError(stderr.read) unless exit_status.success?
+        end
+      rescue StandardError => err
+        $file_logger.error "Faild to prepare upload package: #{err.message}"
+        raise CollectorError
+      end
 
     rescue Exception => e
       $file_logger.error "Failed to prepare upload package: #{e.message}"
@@ -116,14 +131,33 @@ private
   end
 
   def create_provisioning_profile_symlink
-    #TODO iterate provisioning profile list and call method create_symlink
+    @provisioning_profiles.each { |profile|
+      profile.create_symlink @package_dir
+    }
+  end
+
+  def export_csids_to_file
+    @codesigning_identities.each_with_index { |csid, index|
+      csid.export_to_file @package_dir, index
+    }
   end
 
   def add_log_to_upload_package
     begin
       $file_logger.debug "Adding our log #{@log_file_path} to the upload package"
       Dir.chdir @package_dir
-      #TODO Add log to zip with popen3
+      cmd = "zip -j #{@@PACKAGE_NAME} #{@log_file_path}"
+      begin
+        Open3.popen3(*cmd) do |stdin, stdout, stderr, wait_thr|
+          exit_status = wait_thr.value
+          $file_logger.debug "Exit status: #{exit_status}"
+          $file_logger.debug "STDOUT: #{stdout.read}"
+          raise CollectorError(stderr.read) unless exit_status.success?
+        end
+      rescue StandardError => err
+        $file_logger.error "Faild to add log file to package: #{err.message}"
+        raise CollectorError
+      end
 
     rescue StandardError => err
       $file_logger.error "Failed to add log to upload package: #{err.message}"
