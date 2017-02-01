@@ -14,6 +14,7 @@ class ProvisioningProfile
   def read
     if @parsed_data.any?
       return @parsed_data
+
     end
     cmd = ["security", "cms", "-D", "-i", @file_path]
     begin

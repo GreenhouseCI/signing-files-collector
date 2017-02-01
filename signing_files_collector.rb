@@ -1,5 +1,7 @@
 require "fileutils"
+require 'json'
 require "logger"
+require "net/http"
 require "open3"
 require "set"
 require "uri"
@@ -29,13 +31,13 @@ class SigningFilesCollector
       @codesigning_identities = CodesigningIdentitiesCollector.new().collect
       log_to_all "Discarding unreferenced signing files"
       discard_unreferenced
-      log_to_all "Creating upload package"
-      create_upload_package
-      log_to_all "Adding log file to upload package"
-      add_log_to_upload_package
+      # log_to_all "Creating upload package"
+      # create_upload_package
+      # log_to_all "Adding log file to upload package"
+      # add_log_to_upload_package
       log_to_all "iOS signing file collection complete"
-      log_to_all "Starting to upload package to GH"
-      upload_package
+      log_to_all "Starting to upload signing files to GH"
+      upload_signing_files
       $stdout_logger.info "Please return to Greenhouse CI UI to continue"
 
     rescue CollectorError
@@ -45,6 +47,9 @@ class SigningFilesCollector
         $stdout_logger.info "Please attach it when opening a support ticket"
       end
     ensure
+      log_to_all "Upload logs to GH"
+      upload_log
+      log_to_all "Deleting all temporal folders and files"
       remove_package_dir
     end
   end
@@ -163,9 +168,22 @@ private
     end
   end
 
-  def upload_package
+  def upload_log
+    puts PACKAGE_URL
+    url = URI(LOG_URL)
+    http = Net::HTTP.new(url.host, url.port)
+
+    request = Net::HTTP::Post.new(url)
+    request["content-type"] = 'multipart/form-data; boundary=----7MA4YWxkTrZu0gW'
+    request.body = "------7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; name=\"file\"; filename=\"#{@log_file_path}\"\r\nContent-Type: false\r\n\r\n\r\n------7MA4YWxkTrZu0gW--"
+
+    response = http.request(request)
+    puts response.read_body
+  end
+
+  def upload_signing_files
     puts UPLOAD_KEY
-    puts URL
+    puts PACKAGE_URL
   end
 
   def remove_package_dir
@@ -196,8 +214,9 @@ def log_to_all(message, method = :info)
   $stdout_logger.send method, message
 end
 
-URL = ARGV[0]
-UPLOAD_KEY = ARGV[1]
+PACKAGE_URL = ARGV[0]
+LOG_URL = ARGV[1]
+UPLOAD_KEY = ARGV[2]
 
 File.delete($LOG_FILE_NAME) if File.exist?($LOG_FILE_NAME)
 
