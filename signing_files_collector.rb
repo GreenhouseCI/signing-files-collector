@@ -31,8 +31,8 @@ class SigningFilesCollector
       @codesigning_identities = CodesigningIdentitiesCollector.new().collect
       log_to_all "Discarding unreferenced signing files"
       discard_unreferenced
-      # log_to_all "Creating upload package"
-      # create_upload_package
+      log_to_all "Creating upload folder"
+      create_upload_folder
       # log_to_all "Adding log file to upload package"
       # add_log_to_upload_package
       log_to_all "iOS signing file collection complete"
@@ -90,7 +90,7 @@ private
     @codesigning_identities = referenced_codesigning_ids.to_a
   end
 
-  def create_upload_package
+  def create_upload_folder
     $file_logger.info "Preparing upload package"
     begin
       create_provisioning_profile_symlink
@@ -104,27 +104,27 @@ private
       Dir.chdir @package_dir
       signing_files = Dir.glob "*.mobileprovision"
       signing_files.concat Dir.glob("*.p12")
-      $file_logger.debug "Packaging the following signing files:"
-      $file_logger.debug signing_files
-
-      if not signing_files.any?
-        $file_logger.error "No siginig files found in the package dir, aborting"
-        raise CollectorError
-      end
-
-      cmd = "zip -r #{@@PACKAGE_NAME} ./*"
-      begin
-        Open3.popen3(*cmd) do |stdin, stdout, stderr, wait_thr|
-          exit_status = wait_thr.value
-          if not exit_status.success?
-            $file_logger.error "Error while creating upload package: #{stderr.read}"
-            raise CollectorError
-          end
-        end
-      rescue StandardError => err
-        $file_logger.error "Faild to run popen command while preparing upload package: #{err.message}"
-        raise CollectorError
-      end
+      # $file_logger.debug "Packaging the following signing files:"
+      # $file_logger.debug signing_files
+      #
+      # if not signing_files.any?
+      #   $file_logger.error "No siginig files found in the package dir, aborting"
+      #   raise CollectorError
+      # end
+      #
+      # cmd = "zip -r #{@@PACKAGE_NAME} ./*"
+      # begin
+      #   Open3.popen3(*cmd) do |stdin, stdout, stderr, wait_thr|
+      #     exit_status = wait_thr.value
+      #     if not exit_status.success?
+      #       $file_logger.error "Error while creating upload package: #{stderr.read}"
+      #       raise CollectorError
+      #     end
+      #   end
+      # rescue StandardError => err
+      #   $file_logger.error "Faild to run popen command while preparing upload package: #{err.message}"
+      #   raise CollectorError
+      # end
 
     rescue StandardError => err
       $file_logger.error "Failed to prepare upload package: #{err.message}"
