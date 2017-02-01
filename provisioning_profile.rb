@@ -20,13 +20,16 @@ class ProvisioningProfile
     begin
       Open3.popen3(*cmd) do |stdin, stdout, stderr, wait_thr|
         exit_status = wait_thr.value
-        raise CollectorError(stderr.read) unless exit_status.success?
+        if not exit_status.success?
+          $file_logger.error "Error while reading provisioning profile: #{stderr.read}"
+          raise CollectorError
+        end
         @parsed_data = Plist::parse_xml(stdout.read.chomp)
         return @parsed_data
       end
     rescue StandardError => err
       $file_logger.error "Failed to read provisioning profile #{@file_path}: #{err.message}"
-      raise CollectorError err.message
+      raise CollectorError
     end
   end
 
