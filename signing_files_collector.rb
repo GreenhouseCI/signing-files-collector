@@ -169,16 +169,17 @@ private
   end
 
   def upload_log
-    puts PACKAGE_URL
-    url = URI(LOG_URL)
-    http = Net::HTTP.new(url.host, url.port)
-
-    request = Net::HTTP::Post.new(url)
-    request["content-type"] = 'multipart/form-data; boundary=----7MA4YWxkTrZu0gW'
-    request.body = "------7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; name=\"file\"; filename=\"#{@log_file_path}\"\r\nContent-Type: false\r\n\r\n\r\n------7MA4YWxkTrZu0gW--"
-
-    response = http.request(request)
-    puts response.read_body
+    puts "Sending logs to #{LOG_URL}"
+    #TODO works only if Priit's server is running
+    # url = URI(LOG_URL)
+    # http = Net::HTTP.new(url.host, url.port)
+    #
+    # request = Net::HTTP::Post.new(url)
+    # request["content-type"] = 'multipart/form-data; boundary=----7MA4YWxkTrZu0gW'
+    # request.body = "------7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; name=\"file\"; filename=\"#{@log_file_path}\"\r\nContent-Type: false\r\n\r\n\r\n------7MA4YWxkTrZu0gW--"
+    #
+    # response = http.request(request)
+    # puts response.read_body
   end
 
   def upload_signing_files

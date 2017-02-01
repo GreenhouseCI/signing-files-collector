@@ -9,4 +9,4 @@ gem install --install-dir $INSTALL_DIR ruby-keychain plist
 
 GEM_HOME=$INSTALL_DIR ruby signing_files_collector.rb $PACKAGE_URL $LOG_URL $UPLOAD_KEY
 
-#rm -rf $INSTALL_DIR
+rm -rf $INSTALL_DIR

@@ -1,6 +1,7 @@
 class CodesigningIdentity
   IPHONE_DEVELOPER_DESCRIPTOR = "iPhone Developer"
   IPHONE_DISTRIBUTION_DESCRIPTOR = "iPhone Distribution"
+  #TODO think about check these descriptors
 
   def initialize(data)
     @data = data
