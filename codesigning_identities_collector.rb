@@ -31,7 +31,8 @@ class CodesigningIdentitiesCollector
     if scope.all.empty?
       raise "No codesigning identities found in the default keychain. Aborting"
     end
-    scope.all.map { |csid| CodesigningIdentity.new(csid) }
+    signing_identities = scope.all.map { |csid| CodesigningIdentity.new(csid) }
+    signing_identities.select{|csid| csid.useful?}
   end
 
 end
