@@ -12,8 +12,8 @@ class CodesigningIdentity
   def useful?
     is_iphone_type = iphone_type?
     is_not_expired = not_expired?
-    $stdout_logger.info "#{@ref} is #{is_iphone_type ? "" : " not "} suitable for iOS codesigning"
-    $stdout_logger.info "#{@ref} is #{is_not_expired ? "" : " not "} expired"
+    $stdout_logger.info "#{@ref} is#{is_iphone_type ? "" : " not"} suitable for iOS codesigning"
+    $stdout_logger.info "#{@ref} is#{is_not_expired ? " not" : ""} expired"
     return iphone_type? && not_expired?
   end
 
