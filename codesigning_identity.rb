@@ -43,6 +43,10 @@ class CodesigningIdentity
     file_path
   end
 
+  def to_s
+    @ref
+  end
+
   private
 
   attr_accessor :data, :cert, :ref

@@ -79,4 +79,8 @@ class ProvisioningProfile
     end
   end
 
+  def to_s
+    @parsed_data["Name"]
+  end
+
 end
