@@ -1,3 +1,4 @@
+require 'base64'
 require "fileutils"
 require 'json'
 require "logger"
@@ -31,10 +32,9 @@ class SigningFilesCollector
       @codesigning_identities = CodesigningIdentitiesCollector.new().collect
       log_to_all "Discarding unreferenced signing files"
       discard_unreferenced
-      log_to_all "Creating upload folder"
-      create_upload_folder
-      # log_to_all "Adding log file to upload package"
-      # add_log_to_upload_package
+      log_to_all "Preparing signing files for upload"
+      @json_object = prepare_signing_files_for_upload
+      puts @json_object
       log_to_all "iOS signing file collection complete"
       log_to_all "Starting to upload signing files to GH"
       upload_signing_files
@@ -49,8 +49,6 @@ class SigningFilesCollector
     ensure
       log_to_all "Upload logs to GH"
       upload_log
-      log_to_all "Deleting all temporal folders and files"
-      remove_package_dir
     end
   end
 
@@ -100,82 +98,49 @@ private
     @codesigning_identities = referenced_codesigning_ids.to_a
   end
 
-  def create_upload_folder
-    $file_logger.info "Preparing upload package"
+  def prepare_signing_files_for_upload
+    $file_logger.info "Preparing upload object"
     begin
-      create_provisioning_profile_symlink
+      @upload_object = Hash.new
       puts "*" * 84
       puts "Please allow script to access your keychain when prompted, once per matched identity"
       puts "*" * 84
-      export_csids_to_file
+      export_csids_to_hash
       puts "*" * 84
       puts "Thank you!"
       puts "*" * 84
-      Dir.chdir @package_dir
-      signing_files = Dir.glob "*.mobileprovision"
-      signing_files.concat Dir.glob("*.p12")
-      # $file_logger.debug "Packaging the following signing files:"
-      # $file_logger.debug signing_files
+      export_profiles_to_hash
+
+      $file_logger.debug "Preparing the following signing files:"
+      #TODO $file_logger.debug signing_files
       #
       # if not signing_files.any?
       #   $file_logger.error "No siginig files found in the package dir, aborting"
       #   raise CollectorError
       # end
-      #
-      # cmd = "zip -r #{@@PACKAGE_NAME} ./*"
-      # begin
-      #   Open3.popen3(*cmd) do |stdin, stdout, stderr, wait_thr|
-      #     exit_status = wait_thr.value
-      #     if not exit_status.success?
-      #       $file_logger.error "Error while creating upload package: #{stderr.read}"
-      #       raise CollectorError
-      #     end
-      #   end
-      # rescue StandardError => err
-      #   $file_logger.error "Faild to run popen command while preparing upload package: #{err.message}"
-      #   raise CollectorError
-      # end
+
+      @upload_object.to_json
 
     rescue StandardError => err
-      $file_logger.error "Failed to prepare upload package: #{err.message}"
+      $file_logger.error "Failed to prepare upload object: #{err.message}"
       raise CollectorError
     end
   end
 
-  def create_provisioning_profile_symlink
+  def export_csids_to_hash
+    certificates = Array.new
+    @codesigning_identities.each { |csid|
+      certificates << csid.export_to_hash
+    }
+    @upload_object[:certificates] = certificates
+  end
+
+  def export_profiles_to_hash
+    profiles = Array.new
     @provisioning_profiles.each { |profile|
-      profile.create_symlink @package_dir
+      profiles << profile.export_to_hash
     }
-  end
-
-  def export_csids_to_file
-    @codesigning_identities.each_with_index { |csid, index|
-      csid.export_to_file @package_dir, index
-    }
-  end
-
-  def add_log_to_upload_package
-    begin
-      $file_logger.debug "Adding our log #{@log_file_path} to the upload package"
-      Dir.chdir @package_dir
-      cmd = "zip -j #{@@PACKAGE_NAME} #{@log_file_path}"
-      begin
-        Open3.popen3(*cmd) do |stdin, stdout, stderr, wait_thr|
-          exit_status = wait_thr.value
-          if not exit_status.success?
-            $file_logger.error "Error while adding log file to upload package: #{stderr.read}"
-            raise CollectorError
-          end
-        end
-      rescue StandardError => err
-        $file_logger.error "Faild to run popen to add log file to package: #{err.message}"
-        raise CollectorError
-      end
-
-    rescue StandardError => err
-      $file_logger.error "Failed to add log to upload package: #{err.message}"
-      raise CollectorError
-    end
+    @upload_object[:provisioning_profiles] = profiles
   end
 
   def upload_log
@@ -197,27 +162,6 @@ private
     puts PACKAGE_URL
   end
 
-  def remove_package_dir
-    $file_logger.info "Cleaning up"
-    $file_logger.info "Removing package directory #{@package_dir}"
-    begin
-      FileUtils.rmtree @package_dir
-      $file_logger.debug "Package dir removed successfully"
-    rescue SystemCallError => ose
-      $file_logger.error "Failed to clean up package dir: #{ose.message}"
-      raise CollectorError
-    end
-  end
-
-  def remove_log
-    $file_logger.info "Removing log file #{@log_file_path}"
-    begin
-      File.delete @log_file_path
-    rescue SystemCallError => ose
-      $file_logger.error "Failed to clean up log file: #{ose.message}"
-      raise CollectorError
-    end
-  end
 end
 
 def log_to_all(message, method = :info)

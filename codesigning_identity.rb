@@ -35,12 +35,15 @@ class CodesigningIdentity
     @serial = @cert.serial
   end
 
-  def export_to_file(dir, file_index)
-    exported = data.pkcs12
-    file_path = File.join dir, "cert#{file_index + 1}.p12"
-    File.open(file_path, "w") { |file| file.write exported.to_der }
-    $file_logger.debug "#{file_path} written"
-    file_path
+  def export_to_hash
+    base64_encoded = Base64.encode64(@data.pkcs12.to_der)
+    {
+        :serial => @cert.serial.to_s,
+        :subject => @ref,
+        :not_before => @cert.not_before.to_s,
+        :not_after => @cert.not_after.to_s,
+        :file => base64_encoded
+    }
   end
 
   def to_s

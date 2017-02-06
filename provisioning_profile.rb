@@ -68,15 +68,15 @@ class ProvisioningProfile
     serials
   end
 
-  def create_symlink temp_dir
-    begin
-      symlink_path = File.join temp_dir, File.basename(@file_path)
-      $file_logger.debug "Create symlink #{symlink_path} for provisioning profile #{@file_path}"
-      FileUtils.symlink @file_path, symlink_path
-    rescue StandardError => err
-      $file_logger.error "Failed to prepare provisioning profile for packaging: #{err.message}"
-      raise CollectorError
-    end
+  def export_to_hash
+    base64_encoded = Base64.strict_encode64(open(@file_path).read)
+    {
+      :name => @parsed_data["Name"],
+      :uuid => @parsed_data["UUID"],
+      :team_identifier => @parsed_data["TeamIdentifier"],
+      :file => base64_encoded
+    }
+    #TODO add other fields
   end
 
   def to_s
