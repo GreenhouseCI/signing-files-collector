@@ -11,10 +11,10 @@ class CodesigningIdentity
 
   def useful?
     is_iphone_type = iphone_type?
-    is_not_expired = not_expired?
+    is_not_expired = !is_expired?
     $stdout_logger.info "#{@ref} is#{is_iphone_type ? "" : " not"} suitable for iOS codesigning"
     $stdout_logger.info "#{@ref} is#{is_not_expired ? " not" : ""} expired"
-    return iphone_type? && not_expired?
+    return iphone_type? && !is_expired?
   end
 
   def iphone_type?
@@ -25,8 +25,8 @@ class CodesigningIdentity
     is_iphone_developer || is_iphone_distribution
   end
 
-  def not_expired?
-    return (Time.now >= @cert.not_before) && (Time.now < @cert.not_after)
+  def is_expired?
+    return (Time.now <= @cert.not_before) || (Time.now > @cert.not_after)
   end
 
   def serial
