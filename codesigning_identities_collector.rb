@@ -32,7 +32,15 @@ class CodesigningIdentitiesCollector
       raise "No codesigning identities found in the default keychain. Aborting"
     end
     signing_identities = scope.all.map { |csid| CodesigningIdentity.new(csid) }
-    signing_identities.select{|csid| csid.useful?}
+    useful_signing_identities = Array.new
+    signing_identities.each { |csid|
+      if csid.useful?
+        useful_signing_identities << csid
+      else
+        $file_logger.debug "Codesigning identity #{csid} is ignored because it is either not suitable for iOS codesigning or expired"
+      end
+    }
+    useful_signing_identities
   end
 
 end
