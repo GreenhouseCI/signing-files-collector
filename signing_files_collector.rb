@@ -17,7 +17,7 @@ class SigningFilesCollector
 
   def initialize
     @execute_dir = Dir.pwd
-    @log_file_path = File.join @execute_dir, $LOG_FILE_NAME
+    @log_file_path = File.join(@execute_dir, $LOG_FILE_NAME)
     @provisioning_profiles = Array.new
     @codesigning_identities = Array.new
   end
@@ -25,8 +25,8 @@ class SigningFilesCollector
   def collect
     begin
       log_to_all "Preparing to collect iOS signing files"
-      @provisioning_profiles = ProvisioningProfileCollector.new().collect
-      @codesigning_identities = CodesigningIdentitiesCollector.new().collect
+      @provisioning_profiles = ProvisioningProfileCollector.new.collect
+      @codesigning_identities = CodesigningIdentitiesCollector.new.collect
       log_to_all "Discarding unreferenced signing files"
       discard_unreferenced
       log_to_all "Preparing signing files for upload"
@@ -65,7 +65,7 @@ private
           referenced_provisioning_profiles.add profile
         end
       }
-      if !profile_matched
+      if not profile_matched
         $file_logger.debug "Provisioning profile #{profile} did not match any codesigning identity"
       end
     }
@@ -98,7 +98,7 @@ private
       $file_logger.debug signing_files
 
       if not signing_files.any?
-        $file_logger.error "No siginig files found in the package dir, aborting"
+        $file_logger.error "No signing files found in the package dir, aborting"
         raise CollectorError
       end
       @upload_object.to_json
@@ -191,4 +191,4 @@ $stdout_logger.formatter = proc { |severity, datetime, progname, msg|
   "#{date_format} #{severity} #{msg}\n"
 }
 
-SigningFilesCollector.new().collect
+SigningFilesCollector.new.collect
