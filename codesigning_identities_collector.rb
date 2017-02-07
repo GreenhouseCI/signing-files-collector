@@ -7,8 +7,7 @@ class CodesigningIdentitiesCollector
   def collect
     $file_logger.info "Collecting codesigning identities"
     unlock_default_keychain
-    signing_identities = read_ids_from_keychain
-    signing_identities
+    read_ids_from_keychain
   end
 
   private

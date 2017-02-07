@@ -14,12 +14,10 @@ require "./provisioning_profile_collector.rb"
 $LOG_FILE_NAME = "signing_files_collector.log"
 
 class SigningFilesCollector
-  @@PACKAGE_NAME = "signing_files_package.zip"
 
   def initialize
     @execute_dir = Dir.pwd
     @log_file_path = File.join(@execute_dir, $LOG_FILE_NAME)
-    @package_dir = generate_package_dir_name
     @provisioning_profiles = Array.new
     @codesigning_identities = Array.new
   end
@@ -27,7 +25,6 @@ class SigningFilesCollector
   def collect
     begin
       log_to_all "Preparing to collect iOS signing files"
-      create_temp_dir
       @provisioning_profiles = ProvisioningProfileCollector.new.collect
       @codesigning_identities = CodesigningIdentitiesCollector.new.collect
       log_to_all "Discarding unreferenced signing files"
@@ -53,23 +50,6 @@ class SigningFilesCollector
   end
 
 private
-
-  def generate_package_dir_name
-    timestamp = Time.now.to_i
-    dir_name = "/tmp/gh_signing_files_#{timestamp}"
-    $file_logger.info "Temporal package directory has been generated at #{dir_name}"
-    dir_name
-  end
-
-  def create_temp_dir
-    $file_logger.debug "Creating temp directory #{@package_dir}"
-    begin
-      Dir.mkdir(@package_dir) if not File.exists?(@package_dir)
-    rescue SystemCallError => ose
-      $file_logger.error "Failed to prepare environment: #{ose.message}"
-      raise CollectorError
-    end
-  end
 
   def discard_unreferenced
     $file_logger.info "Matching provisioning profiles & codesigning identities"
@@ -121,7 +101,6 @@ private
         $file_logger.error "No signing files found in the package dir, aborting"
         raise CollectorError
       end
-
       @upload_object.to_json
 
     rescue StandardError => err
@@ -147,22 +126,42 @@ private
   end
 
   def upload_log
-    puts "Sending logs to #{LOG_URL}"
-    #TODO works only if Priit's server is running
-    # url = URI(LOG_URL)
-    # http = Net::HTTP.new(url.host, url.port)
-    #
-    # request = Net::HTTP::Post.new(url)
-    # request["content-type"] = 'multipart/form-data; boundary=----7MA4YWxkTrZu0gW'
-    # request.body = "------7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; name=\"file\"; filename=\"#{@log_file_path}\"\r\nContent-Type: false\r\n\r\n\r\n------7MA4YWxkTrZu0gW--"
-    #
-    # response = http.request(request)
-    # puts response.read_body
+    $file_logger.debug "Sending logs to #{LOG_URL}"
+    begin
+      url = URI(LOG_URL)
+      http = Net::HTTP.new(url.host, url.port)
+
+      request = Net::HTTP::Post.new(url)
+      request["content-type"] = 'multipart/form-data; boundary=----7MA4YWxkTrZu0gW'
+      request["Authorization"] = UPLOAD_KEY
+      request.body = "------7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; name=\"file\"; filename=\"#{@log_file_path}\"\r\nContent-Type: false\r\n\r\n\r\n------7MA4YWxkTrZu0gW--"
+      response = http.request(request)
+      puts response.read_body
+    rescue StandardError => err
+      $file_logger.error "Failed to upload signing files to server: #{err.message}"
+      log_to_all "You probably did not run Priit's server", :error
+    end
   end
 
   def upload_signing_files
-    puts UPLOAD_KEY
-    puts PACKAGE_URL
+    $file_logger.debug "Sending signing files to #{SIGNING_FILES_UPLOAD_URL}"
+    begin
+      url = URI(SIGNING_FILES_UPLOAD_URL)
+      http = Net::HTTP.new(url.host, url.port)
+
+      request = Net::HTTP::Post.new(url)
+      request["content-type"] = 'text/json'
+      request["Authorization"] = UPLOAD_KEY
+      request.body = @json_object
+
+      response = http.request(request)
+      puts response.read_body
+    rescue StandardError => err
+      $file_logger.error "Failed to upload signing files to server: #{err.message}"
+      log_to_all "You probably did not run Priit's server", :error
+      raise CollectorError
+    end
+
   end
 
 end
@@ -172,7 +171,7 @@ def log_to_all(message, method = :info)
   $stdout_logger.send method, message
 end
 
-PACKAGE_URL = ARGV[0]
+SIGNING_FILES_UPLOAD_URL = ARGV[0]
 LOG_URL = ARGV[1]
 UPLOAD_KEY = ARGV[2]
 
