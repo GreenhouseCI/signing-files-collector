@@ -121,7 +121,6 @@ private
         $file_logger.error "No siginig files found in the package dir, aborting"
         raise CollectorError
       end
-
       @upload_object.to_json
 
     rescue StandardError => err
@@ -147,22 +146,42 @@ private
   end
 
   def upload_log
-    puts "Sending logs to #{LOG_URL}"
-    #TODO works only if Priit's server is running
-    # url = URI(LOG_URL)
-    # http = Net::HTTP.new(url.host, url.port)
-    #
-    # request = Net::HTTP::Post.new(url)
-    # request["content-type"] = 'multipart/form-data; boundary=----7MA4YWxkTrZu0gW'
-    # request.body = "------7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; name=\"file\"; filename=\"#{@log_file_path}\"\r\nContent-Type: false\r\n\r\n\r\n------7MA4YWxkTrZu0gW--"
-    #
-    # response = http.request(request)
-    # puts response.read_body
+    $file_logger.debug "Sending logs to #{LOG_URL}"
+    begin
+      url = URI(LOG_URL)
+      http = Net::HTTP.new(url.host, url.port)
+
+      request = Net::HTTP::Post.new(url)
+      request["content-type"] = 'multipart/form-data; boundary=----7MA4YWxkTrZu0gW'
+      request["Authorization"] = UPLOAD_KEY
+      request.body = "------7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; name=\"file\"; filename=\"#{@log_file_path}\"\r\nContent-Type: false\r\n\r\n\r\n------7MA4YWxkTrZu0gW--"
+      response = http.request(request)
+      puts response.read_body
+    rescue StandardError => err
+      $file_logger.error "Failed to upload signing files to server: #{err.message}"
+      log_to_all "You probably did not run Priit's server", :error
+    end
   end
 
   def upload_signing_files
-    puts UPLOAD_KEY
-    puts PACKAGE_URL
+    $file_logger.debug "Sending signing files to #{SIGNING_FILES_UPLOAD_URL}"
+    begin
+      url = URI(SIGNING_FILES_UPLOAD_URL)
+      http = Net::HTTP.new(url.host, url.port)
+
+      request = Net::HTTP::Post.new(url)
+      request["content-type"] = 'text/json'
+      request["Authorization"] = UPLOAD_KEY
+      request.body = @json_object
+
+      response = http.request(request)
+      puts response.read_body
+    rescue StandardError => err
+      $file_logger.error "Failed to upload signing files to server: #{err.message}"
+      log_to_all "You probably did not run Priit's server", :error
+      raise CollectorError
+    end
+
   end
 
 end
@@ -172,7 +191,7 @@ def log_to_all(message, method = :info)
   $stdout_logger.send method, message
 end
 
-PACKAGE_URL = ARGV[0]
+SIGNING_FILES_UPLOAD_URL = ARGV[0]
 LOG_URL = ARGV[1]
 UPLOAD_KEY = ARGV[2]
 
