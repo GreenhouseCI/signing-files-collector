@@ -14,12 +14,10 @@ require "./provisioning_profile_collector.rb"
 $LOG_FILE_NAME = "signing_files_collector.log"
 
 class SigningFilesCollector
-  @@PACKAGE_NAME = "signing_files_package.zip"
 
   def initialize
     @execute_dir = Dir.pwd
     @log_file_path = File.join @execute_dir, $LOG_FILE_NAME
-    @package_dir = generate_package_dir_name
     @provisioning_profiles = Array.new
     @codesigning_identities = Array.new
   end
@@ -27,7 +25,6 @@ class SigningFilesCollector
   def collect
     begin
       log_to_all "Preparing to collect iOS signing files"
-      create_temp_dir
       @provisioning_profiles = ProvisioningProfileCollector.new().collect
       @codesigning_identities = CodesigningIdentitiesCollector.new().collect
       log_to_all "Discarding unreferenced signing files"
@@ -53,23 +50,6 @@ class SigningFilesCollector
   end
 
 private
-
-  def generate_package_dir_name
-    timestamp = Time.now.to_i
-    dir_name = "/tmp/gh_signing_files_#{timestamp}"
-    $file_logger.info "Temporal package directory has been generated at #{dir_name}"
-    dir_name
-  end
-
-  def create_temp_dir
-    $file_logger.debug "Creating temp directory #{@package_dir}"
-    begin
-      Dir.mkdir(@package_dir) if not File.exists?(@package_dir)
-    rescue SystemCallError => ose
-      $file_logger.error "Failed to prepare environment: #{ose.message}"
-      raise CollectorError
-    end
-  end
 
   def discard_unreferenced
     $file_logger.info "Matching provisioning profiles & codesigning identities"
