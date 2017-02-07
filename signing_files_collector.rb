@@ -109,15 +109,18 @@ private
       puts "*" * 84
       puts "Thank you!"
       puts "*" * 84
+
       export_profiles_to_hash
 
+      signing_files = @upload_object[:certificates].map { |cert| cert[:subject] }
+      signing_files += @upload_object[:provisioning_profiles].map { |profile| profile[:name]}
       $file_logger.debug "Preparing the following signing files:"
-      #TODO $file_logger.debug signing_files
-      #
-      # if not signing_files.any?
-      #   $file_logger.error "No siginig files found in the package dir, aborting"
-      #   raise CollectorError
-      # end
+      $file_logger.debug signing_files
+
+      if not signing_files.any?
+        $file_logger.error "No siginig files found in the package dir, aborting"
+        raise CollectorError
+      end
 
       @upload_object.to_json
 
