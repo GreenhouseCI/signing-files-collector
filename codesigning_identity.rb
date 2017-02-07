@@ -12,21 +12,21 @@ class CodesigningIdentity
   def useful?
     is_iphone_type = iphone_type?
     is_not_expired = !is_expired?
-    log_to_all "#{@ref} is#{is_iphone_type ? "" : " not"} suitable for iOS codesigning"
-    log_to_all "#{@ref} is#{is_not_expired ? " not" : ""} expired"
-    return iphone_type? && !is_expired?
+    log_to_all "#{@ref} is#{is_iphone_type ? '' : ' not'} suitable for iOS codesigning"
+    log_to_all "#{@ref} is#{is_not_expired ? ' not' : ''} expired"
+    is_iphone_type && !is_expired?
   end
 
   def iphone_type?
     $file_logger.debug "Processing certificate with subject #{@ref}"
-    is_iphone_developer = !!(@ref =~ /#{IPHONE_DEVELOPER_DESCRIPTOR}/)
-    is_iphone_distribution = !!(@ref =~ /#{IPHONE_DISTRIBUTION_DESCRIPTOR}/)
+    is_iphone_developer = !(@ref =~ /#{IPHONE_DEVELOPER_DESCRIPTOR}/).nil?
+    is_iphone_distribution = !(@ref =~ /#{IPHONE_DISTRIBUTION_DESCRIPTOR}/).nil?
     $file_logger.debug "Developer - #{is_iphone_developer}; Distribution - #{is_iphone_distribution}"
     is_iphone_developer || is_iphone_distribution
   end
 
   def is_expired?
-    return (Time.now <= @cert.not_before) || (Time.now > @cert.not_after)
+    (Time.now <= @cert.not_before) || (Time.now > @cert.not_after)
   end
 
   def serial
