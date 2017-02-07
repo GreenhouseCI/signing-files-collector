@@ -50,6 +50,10 @@ class CodesigningIdentity
     @ref
   end
 
+  def ==(other)
+    self.serial == other.serial && self.class == other.class
+  end
+
   private
 
   attr_accessor :data, :cert, :ref

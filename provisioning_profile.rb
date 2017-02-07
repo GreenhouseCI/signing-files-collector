@@ -83,4 +83,8 @@ class ProvisioningProfile
     @parsed_data["Name"]
   end
 
+  def ==(other)
+    self.serials == other.serials && self.class == other.class
+  end
+
 end
