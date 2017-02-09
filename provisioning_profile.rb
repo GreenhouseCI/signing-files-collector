@@ -68,15 +68,30 @@ class ProvisioningProfile
     serials
   end
 
+  def has_beta_entitlements
+    entitlements = @parsed_data["Entitlements"].nil? || {}
+    entitlements["beta-reports-active"] || false
+  end
+
+  def application_identifier
+    entitlements = @parsed_data["Entitlements"].nil? || {}
+    entitlements["application-identifier"] || ""
+  end
+
   def export_to_hash
     base64_encoded = Base64.strict_encode64(open(@file_path).read)
     {
       :name => @parsed_data["Name"],
       :uuid => @parsed_data["UUID"],
-      :team_identifier => @parsed_data["TeamIdentifier"],
+      :team_identifier => @parsed_data["TeamIdentifier"][0] || "",
+      :team_name => @parsed_data["TeamName"] || "",
+      :has_beta_entitlements => has_beta_entitlements,
+      :provisioned_devices => @parsed_data["ProvisionedDevices"] || [],
+      :provisioned_all_devices => @parsed_data["ProvisionesAllDevices"] || false,
+      :application_identifier => application_identifier,
+      :is_wildcard_identifier => application_identifier.end_with?("*"),
       :file => base64_encoded
     }
-    #TODO add other fields
   end
 
   def to_s
