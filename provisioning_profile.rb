@@ -83,6 +83,9 @@ class ProvisioningProfile
     {
       :name => @parsed_data["Name"],
       :uuid => @parsed_data["UUID"],
+      :serials => self.serials.map {|s| s.to_s},
+      :not_before => @parsed_data["CreationDate"],
+      :not_after => @parsed_data["ExpirationDate"],
       :team_identifier => @parsed_data["TeamIdentifier"][0] || "",
       :team_name => @parsed_data["TeamName"] || "",
       :has_beta_entitlements => has_beta_entitlements,
