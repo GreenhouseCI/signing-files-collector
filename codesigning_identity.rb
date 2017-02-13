@@ -40,8 +40,8 @@ class CodesigningIdentity
     {
         :serial => @cert.serial.to_s,
         :subject => @ref,
-        :not_before => @cert.not_before.to_s,
-        :not_after => @cert.not_after.to_s,
+        :not_before => @cert.not_before.strftime('%Y-%m-%d %H:%M:%S'),
+        :not_after => @cert.not_after.strftime('%Y-%m-%d %H:%M:%S'),
         :file => base64_encoded
     }
   end
