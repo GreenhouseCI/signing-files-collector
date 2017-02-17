@@ -175,7 +175,7 @@ SIGNING_FILES_UPLOAD_URL = ARGV[1]
 LOG_URL = ARGV[2]
 UPLOAD_KEY = ARGV[3]
 
-$LOG_FILE_NAME = WORKING_DIR +"/signing_files_collector.log"
+$LOG_FILE_NAME = WORKING_DIR << "/signing_files_collector.log"
 
 File.delete($LOG_FILE_NAME) if File.exist?($LOG_FILE_NAME)
 
