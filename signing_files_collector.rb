@@ -11,12 +11,11 @@ require "./codesigning_identities_collector.rb"
 require "./collector_errors.rb"
 require "./provisioning_profile_collector.rb"
 
-$LOG_FILE_NAME = "signing_files_collector.log"
 
 class SigningFilesCollector
 
   def initialize
-    @execute_dir = Dir.pwd
+    @execute_dir = WORKING_DIR #Dir.pwd
     @log_file_path = File.join(@execute_dir, $LOG_FILE_NAME)
     @provisioning_profiles = Array.new
     @codesigning_identities = Array.new
@@ -171,9 +170,12 @@ def log_to_all(message, method = :info)
   $stdout_logger.send method, message
 end
 
-SIGNING_FILES_UPLOAD_URL = ARGV[0]
-LOG_URL = ARGV[1]
-UPLOAD_KEY = ARGV[2]
+WORKING_DIR = ARGV[0]
+SIGNING_FILES_UPLOAD_URL = ARGV[1]
+LOG_URL = ARGV[2]
+UPLOAD_KEY = ARGV[3]
+
+$LOG_FILE_NAME = WORKING_DIR +"/signing_files_collector.log"
 
 File.delete($LOG_FILE_NAME) if File.exist?($LOG_FILE_NAME)
 
