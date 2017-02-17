@@ -16,7 +16,6 @@ class SigningFilesCollector
 
   def initialize
     @log_file_path = $LOG_FILE_NAME
-    puts @log_file_path
     @provisioning_profiles = Array.new
     @codesigning_identities = Array.new
   end
@@ -137,10 +136,6 @@ private
       puts response.read_body
     rescue StandardError => err
       $file_logger.error "Failed to upload collector log to server: #{err.message}"
-      if File.exist?(@log_file_path)
-        $stdout_logger.info "You can find the debug log at #{@log_file_path}"
-        $stdout_logger.info "Please attach it when opening a support ticket"
-      end
     end
   end
 
