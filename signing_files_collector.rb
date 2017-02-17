@@ -175,9 +175,9 @@ SIGNING_FILES_UPLOAD_URL = ARGV[1]
 LOG_URL = ARGV[2]
 UPLOAD_KEY = ARGV[3]
 
-puts "#{WORKING_DIR.frozen?}"
+working_directory = WORKING_DIR.dub
 
-$LOG_FILE_NAME = WORKING_DIR.dub << "/signing_files_collector.log"
+$LOG_FILE_NAME = working_directory << "/signing_files_collector.log"
 
 puts $LOG_FILE_NAME
 
