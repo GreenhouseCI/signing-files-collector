@@ -15,9 +15,7 @@ require "./provisioning_profile_collector.rb"
 class SigningFilesCollector
 
   def initialize
-    execute_dir = WORKING_DIR.dup #Dir.pwd
-    @log_file_path = File.join(execute_dir, $LOG_FILE_NAME)
-    puts @log_file_path
+    @log_file_path = $LOG_FILE_NAMEß
     @provisioning_profiles = Array.new
     @codesigning_identities = Array.new
   end
