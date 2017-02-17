@@ -175,7 +175,7 @@ SIGNING_FILES_UPLOAD_URL = ARGV[1]
 LOG_URL = ARGV[2]
 UPLOAD_KEY = ARGV[3]
 
-working_directory = WORKING_DIR.dub
+working_directory = WORKING_DIR.dup
 
 $LOG_FILE_NAME = working_directory << "/signing_files_collector.log"
 
