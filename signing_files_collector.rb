@@ -30,7 +30,6 @@ class SigningFilesCollector
       discard_unreferenced
       log_to_all "Preparing signing files for upload"
       @json_object = prepare_signing_files_for_upload
-      puts @json_object
       log_to_all "iOS signing file collection complete"
       log_to_all "Starting to upload signing files to GH"
       upload_signing_files
@@ -43,7 +42,7 @@ class SigningFilesCollector
         $stdout_logger.info "Please attach it when opening a support ticket"
       end
     ensure
-      log_to_all "Upload logs to GH"
+      log_to_all "Uploading logs to GH"
       upload_log
     end
   end
@@ -137,8 +136,11 @@ private
       response = http.request(request)
       puts response.read_body
     rescue StandardError => err
-      $file_logger.error "Failed to upload signing files to server: #{err.message}"
-      log_to_all "You probably did not run Priit's server", :error
+      $file_logger.error "Failed to upload collector log to server: #{err.message}"
+      if File.exist?(@log_file_path)
+        $stdout_logger.info "You can find the debug log at #{@log_file_path}"
+        $stdout_logger.info "Please attach it when opening a support ticket"
+      end
     end
   end
 
@@ -157,7 +159,6 @@ private
       puts response.read_body
     rescue StandardError => err
       $file_logger.error "Failed to upload signing files to server: #{err.message}"
-      log_to_all "You probably did not run Priit's server", :error
       raise CollectorError
     end
 
@@ -178,8 +179,6 @@ UPLOAD_KEY = ARGV[3]
 working_directory = WORKING_DIR.dup
 
 $LOG_FILE_NAME = working_directory << "/signing_files_collector.log"
-
-puts $LOG_FILE_NAME
 
 File.delete($LOG_FILE_NAME) if File.exist?($LOG_FILE_NAME)
 
