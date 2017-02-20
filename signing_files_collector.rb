@@ -127,6 +127,7 @@ private
     begin
       url = URI(LOG_URL)
       http = Net::HTTP.new(url.host, url.port)
+      http.use_ssl = url.scheme == 'https'
 
       request = Net::HTTP::Post.new(url)
       request["content-type"] = 'multipart/form-data; boundary=----7MA4YWxkTrZu0gW'
@@ -144,6 +145,7 @@ private
     begin
       url = URI(SIGNING_FILES_UPLOAD_URL)
       http = Net::HTTP.new(url.host, url.port)
+      http.use_ssl = url.scheme == 'https'
 
       request = Net::HTTP::Post.new(url)
       request["content-type"] = 'text/json'
