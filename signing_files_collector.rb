@@ -148,7 +148,7 @@ private
       http.use_ssl = url.scheme == 'https'
 
       request = Net::HTTP::Post.new(url)
-      request["content-type"] = 'text/json'
+      request["content-type"] = 'application/json'
       request["Authorization"] = UPLOAD_KEY
       request.body = @json_object
 
