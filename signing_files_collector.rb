@@ -15,12 +15,14 @@ require "./provisioning_profile_collector.rb"
 class SigningFilesCollector
 
   def initialize
+    @signing_files_collection_id = nil
     @log_file_path = $LOG_FILE_NAME
     @provisioning_profiles = Array.new
     @codesigning_identities = Array.new
   end
 
   def collect
+    start_collection
     begin
       log_to_all "Preparing to collect iOS signing files"
       @provisioning_profiles = ProvisioningProfileCollector.new.collect
@@ -122,38 +124,60 @@ private
     @upload_object[:provisioning_profiles] = profiles
   end
 
-  def upload_log
-    $file_logger.debug "Sending logs to #{LOG_URL}"
+  def start_collection
+    $file_logger.debug "Create signing files collection #{SIGNING_FILES_COLLECTION_URL}"
     begin
-      url = URI(LOG_URL)
+      url = URI(SIGNING_FILES_COLLECTION_URL)
       http = Net::HTTP.new(url.host, url.port)
       http.use_ssl = url.scheme == 'https'
 
       request = Net::HTTP::Post.new(url)
-      request["content-type"] = 'multipart/form-data; boundary=----7MA4YWxkTrZu0gW'
-      request["Authorization"] = UPLOAD_KEY
+      request['Authorization'] = UPLOAD_KEY
+      response = http.request(request)
+      puts response.body
+      collection = JSON.parse(response.body)
+      puts collection
+      puts collection['id']
+      @signing_files_collection_id = collection['id']
+    rescue StandardError => err
+      $file_logger.error "Failed to upload collector log to server: #{err.message}"
+    end
+  end
+
+  def upload_log
+    log_url = "#{SIGNING_FILES_COLLECTION_URL}/#{@signing_files_collection_id}/logs/"
+    $file_logger.debug "Sending logs to #{log_url}"
+    begin
+      url = URI(log_url)
+      http = Net::HTTP.new(url.host, url.port)
+      http.use_ssl = url.scheme == 'https'
+
+      request = Net::HTTP::Post.new(url)
+      request['Content-Type'] = 'multipart/form-data; boundary=----7MA4YWxkTrZu0gW'
+      request['Authorization'] = UPLOAD_KEY
       request.body = "------7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; name=\"file\"; filename=\"#{@log_file_path}\"\r\nContent-Type: false\r\n\r\n\r\n------7MA4YWxkTrZu0gW--"
       response = http.request(request)
-      puts response.read_body
+      puts response.body
     rescue StandardError => err
       $file_logger.error "Failed to upload collector log to server: #{err.message}"
     end
   end
 
   def upload_signing_files
-    $file_logger.debug "Sending signing files to #{SIGNING_FILES_UPLOAD_URL}"
+    files_url = "#{SIGNING_FILES_COLLECTION_URL}/#{@signing_files_collection_id}/files/"
+    $file_logger.debug "Sending signing files to #{files_url}"
     begin
-      url = URI(SIGNING_FILES_UPLOAD_URL)
+      url = URI(files_url)
       http = Net::HTTP.new(url.host, url.port)
       http.use_ssl = url.scheme == 'https'
 
       request = Net::HTTP::Post.new(url)
-      request["content-type"] = 'application/json'
-      request["Authorization"] = UPLOAD_KEY
+      request['Content-Type'] = 'application/json'
+      request['Authorization'] = UPLOAD_KEY
       request.body = @json_object
 
       response = http.request(request)
-      puts response.read_body
+      puts response.body
     rescue StandardError => err
       $file_logger.error "Failed to upload signing files to server: #{err.message}"
       raise CollectorError
@@ -169,13 +193,12 @@ def log_to_all(message, method = :info)
 end
 
 WORKING_DIR = ARGV[0]
-SIGNING_FILES_UPLOAD_URL = ARGV[1]
-LOG_URL = ARGV[2]
-UPLOAD_KEY = ARGV[3]
+SIGNING_FILES_COLLECTION_URL = ARGV[1]
+UPLOAD_KEY = ARGV[2]
 
 working_directory = WORKING_DIR.dup
 
-$LOG_FILE_NAME = working_directory << "/signing_files_collector.log"
+$LOG_FILE_NAME = "#{working_directory}/signing_files_collector.log"
 
 File.delete($LOG_FILE_NAME) if File.exist?($LOG_FILE_NAME)
 
