@@ -7,6 +7,23 @@ class CodesigningIdentity
     @cert = @data.certificate.x509
     @ref = @cert.subject.to_s
     @serial = nil
+    @common_name = nil
+    @team_identifier = nil
+    @team_name = nil
+    parse_subject
+  end
+
+  def parse_subject
+    @cert.subject.to_a.each do | sub_array |
+      k, v = sub_array
+      if k == 'UID'
+        @team_identifier = v
+      elsif k == 'CN'
+        @common_name = v
+      elsif k == 'O'
+        @team_name == v
+      end
+    end
   end
 
   def useful?
@@ -40,6 +57,9 @@ class CodesigningIdentity
     {
         :serial => @cert.serial.to_s,
         :subject => @ref,
+        :common_name => @common_name,
+        :team_identifier => @team_identifier,
+        :team_name => @team_name,
         :not_before => @cert.not_before.strftime('%Y-%m-%d %H:%M:%S'),
         :not_after => @cert.not_after.strftime('%Y-%m-%d %H:%M:%S'),
         :file => base64_encoded
