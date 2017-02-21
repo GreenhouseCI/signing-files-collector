@@ -69,12 +69,12 @@ class ProvisioningProfile
   end
 
   def has_beta_entitlements
-    entitlements = @parsed_data["Entitlements"].nil? || {}
+    entitlements = @parsed_data["Entitlements"] || {}
     entitlements["beta-reports-active"] || false
   end
 
   def application_identifier
-    entitlements = @parsed_data["Entitlements"].nil? || {}
+    entitlements = @parsed_data["Entitlements"] || {}
     entitlements["application-identifier"] || ""
   end
 
