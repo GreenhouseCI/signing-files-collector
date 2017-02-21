@@ -1,6 +1,6 @@
-require 'base64'
+require "base64"
 require "fileutils"
-require 'json'
+require "json"
 require "logger"
 require "net/http"
 require "open3"
@@ -140,7 +140,8 @@ private
       puts collection['id']
       @signing_files_collection_id = collection['id']
     rescue StandardError => err
-      $file_logger.error "Failed to upload collector log to server: #{err.message}"
+      $file_logger.error "Failed to initialize signing files collection: #{err.message}"
+      raise err
     end
   end
 
@@ -152,12 +153,22 @@ private
       http = Net::HTTP.new(url.host, url.port)
       http.use_ssl = url.scheme == 'https'
 
+      boundary = 'AaB03x'
+      post_body = []
+      post_body << "--#{boundary}\r\n"
+      post_body << "Content-Disposition: form-data; name=\"logfile\"; filename=\"#{File.basename(@log_file_path)}\"\r\n"
+      post_body << "Content-Type: text/plain\r\n"
+      post_body << "\r\n"
+      post_body << File.read(@log_file_path)
+      post_body << "\r\n--#{boundary}--\r\n"
+
       request = Net::HTTP::Post.new(url)
-      request['Content-Type'] = 'multipart/form-data; boundary=----7MA4YWxkTrZu0gW'
+      request.body = post_body.join
+      request['Content-Type'] = "multipart/form-data; boundary=#{boundary}"
       request['Authorization'] = UPLOAD_KEY
-      request.body = "------7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; name=\"file\"; filename=\"#{@log_file_path}\"\r\nContent-Type: false\r\n\r\n\r\n------7MA4YWxkTrZu0gW--"
+
       response = http.request(request)
-      puts response.body
+      $file_logger.debug response.body
     rescue StandardError => err
       $file_logger.error "Failed to upload collector log to server: #{err.message}"
     end
