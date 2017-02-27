@@ -16,7 +16,7 @@ class CodesigningIdentity
   def parse_subject
     @cert.subject.to_a.each do | sub_array |
       k, v = sub_array
-      if k == 'UID'
+      if k == 'OU'
         @team_identifier = v
       elsif k == 'CN'
         @common_name = v
