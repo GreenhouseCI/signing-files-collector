@@ -5,6 +5,7 @@ require "logger"
 require "net/http"
 require "open3"
 require "set"
+require "tempfile"
 require "uri"
 
 require "./codesigning_identities_collector.rb"
@@ -14,9 +15,9 @@ require "./provisioning_profile_collector.rb"
 
 class SigningFilesCollector
 
-  def initialize
+  def initialize(log_file_path)
     @signing_files_collection_id = nil
-    @log_file_path = $LOG_FILE_NAME
+    @log_file_path = log_file_path
     @provisioning_profiles = Array.new
     @codesigning_identities = Array.new
   end
@@ -203,17 +204,11 @@ def log_to_all(message, method = :info)
   $stdout_logger.send method, message
 end
 
-WORKING_DIR = ARGV[0]
-SIGNING_FILES_COLLECTION_URL = ARGV[1]
-UPLOAD_KEY = ARGV[2]
+SIGNING_FILES_COLLECTION_URL = ARGV[0]
+UPLOAD_KEY = ARGV[1]
 
-working_directory = WORKING_DIR.dup
+log_file = Tempfile.new %w(nevercode-signing-files-collector-log- .log)
 
-$LOG_FILE_NAME = "#{working_directory}/signing_files_collector.log"
-
-File.delete($LOG_FILE_NAME) if File.exist?($LOG_FILE_NAME)
-
-log_file = File.open $LOG_FILE_NAME, "a"
 $file_logger = Logger.new log_file
 $file_logger.level = Logger::DEBUG
 $file_logger.formatter = proc { |severity, datetime, progname, msg|
@@ -227,4 +222,5 @@ $stdout_logger.formatter = proc { |severity, datetime, progname, msg|
   "#{date_format} #{severity} #{msg}\n"
 }
 
-SigningFilesCollector.new.collect
+collector = SigningFilesCollector.new log_file.path
+collector.collect
