@@ -207,10 +207,9 @@ end
 SIGNING_FILES_COLLECTION_URL = ARGV[0]
 UPLOAD_KEY = ARGV[1]
 
-log_file = Tempfile.new %w(nevercode-signing-files-collector-log- .log)
-ObjectSpace.undefine_finalizer log_file
+log_file_path = Dir::Tmpname.make_tmpname 'nevercode-signing-files-collector-log-', '.log'
 
-$file_logger = Logger.new log_file
+$file_logger = Logger.new log_file_path
 $file_logger.level = Logger::DEBUG
 $file_logger.formatter = proc { |severity, datetime, progname, msg|
   date_format = datetime.strftime("%Y-%m-%d %H:%M:%S")
@@ -223,5 +222,5 @@ $stdout_logger.formatter = proc { |severity, datetime, progname, msg|
   "#{date_format} #{severity} #{msg}\n"
 }
 
-collector = SigningFilesCollector.new log_file.path
+collector = SigningFilesCollector.new log_file_path
 collector.collect
