@@ -212,7 +212,7 @@ $file_logger = Logger.new log_file_path
 $file_logger.level = Logger::DEBUG
 $file_logger.formatter = proc { |severity, datetime, progname, msg|
   date_format = datetime.strftime("%Y-%m-%d %H:%M:%S")
-  "#{date_format} #{severity} #{caller[4]} #{msg}\n"
+  "#{date_format} #{severity} #{__FILE__}: #{__LINE__} #{msg}\n"
 }
 $stdout_logger = Logger.new STDOUT
 $stdout_logger.level = Logger::INFO
