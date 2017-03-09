@@ -90,7 +90,7 @@ class ProvisioningProfile
       :team_name => @parsed_data["TeamName"] || "",
       :has_beta_entitlements => has_beta_entitlements,
       :provisioned_devices => @parsed_data["ProvisionedDevices"] || [],
-      :provisioned_all_devices => @parsed_data["ProvisionsAllDevices"] || false,
+      :provisions_all_devices => @parsed_data["ProvisionsAllDevices"] || false,
       :application_identifier => application_identifier,
       :is_wildcard_identifier => application_identifier.end_with?("*"),
       :file => base64_encoded
