@@ -135,10 +135,9 @@ private
       request = Net::HTTP::Post.new(url)
       request['Authorization'] = UPLOAD_KEY
       response = http.request(request)
-      puts response.body
+      $file_logger.debug response.body
       collection = JSON.parse(response.body)
-      puts collection
-      puts collection['id']
+      $file_logger.debug collection
       @signing_files_collection_id = collection['id']
     rescue StandardError => err
       $file_logger.error "Failed to initialize signing files collection: #{err.message}"
@@ -189,7 +188,7 @@ private
       request.body = @json_object
 
       response = http.request(request)
-      puts response.body
+      $file_logger.debug response.body
     rescue StandardError => err
       $file_logger.error "Failed to upload signing files to server: #{err.message}"
       raise CollectorError
