@@ -206,7 +206,8 @@ end
 SIGNING_FILES_COLLECTION_URL = ARGV[0]
 UPLOAD_KEY = ARGV[1]
 
-log_file_path = Dir::Tmpname.make_tmpname 'nevercode-signing-files-collector-log-', '.log'
+log_basename = File.join(Dir.tmpdir(), 'nevercode-signing-files-collector-log-')
+log_file_path = Dir::Tmpname.make_tmpname(log_basename, '.log')
 
 $file_logger = Logger.new log_file_path
 $file_logger.level = Logger::DEBUG
