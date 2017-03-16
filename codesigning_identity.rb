@@ -1,6 +1,7 @@
 class CodesigningIdentity
   IPHONE_DEVELOPER_DESCRIPTOR = "iPhone Developer"
   IPHONE_DISTRIBUTION_DESCRIPTOR = "iPhone Distribution"
+  ASN1_STRFLGS_ESC_MSB = 4
 
   def initialize(data)
     @data = data
@@ -13,17 +14,16 @@ class CodesigningIdentity
     parse_subject
   end
 
+  def self.openssl_to_utf8(value)
+    value = value.to_s(OpenSSL::X509::Name::ONELINE & ~ASN1_STRFLGS_ESC_MSB)
+    value = value.force_encoding(Encoding::UTF_8)
+  end
+
   def parse_subject
-    @cert.subject.to_a.each do | sub_array |
-      k, v = sub_array
-      if k == 'OU'
-        @team_identifier = v
-      elsif k == 'CN'
-        @common_name = v
-      elsif k == 'O'
-        @team_name == v
-      end
-    end
+    subj = self.class.openssl_to_utf8(@cert.subject)
+    @common_name = subj.scan(/CN = ([^,]+), /).first().first()
+    @team_identifier = subj.scan(/OU = ([^,]+), /).first().first()
+    @team_name = subj.scan(/O = ([^,]+), /).first().first()
   end
 
   def useful?
