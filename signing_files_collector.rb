@@ -33,9 +33,9 @@ class SigningFilesCollector
       log_to_all "Preparing signing files for upload"
       @json_object = prepare_signing_files_for_upload
       log_to_all "iOS signing file collection complete"
-      log_to_all "Starting to upload signing files to GH"
+      log_to_all "Starting to upload signing files to Nevercode"
       upload_signing_files
-      $stdout_logger.info "Please return to Greenhouse CI UI to continue"
+      $stdout_logger.info "Please return to Nevercode UI to continue"
 
     rescue CollectorError
       log_to_all "Signing file collection failed. Aborting"
@@ -44,7 +44,7 @@ class SigningFilesCollector
         $stdout_logger.info "Please attach it when opening a support ticket"
       end
     ensure
-      log_to_all "Uploading logs to GH"
+      log_to_all "Uploading logs to Nevercode"
       upload_log
     end
   end
