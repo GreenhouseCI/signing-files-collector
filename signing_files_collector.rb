@@ -35,7 +35,7 @@ class SigningFilesCollector
       log_to_all "iOS signing file collection complete"
       log_to_all "Starting to upload signing files to Nevercode"
       upload_signing_files
-      $stdout_logger.info "Please return to Nevercode CI UI to continue"
+      $stdout_logger.info "Please return to Nevercode UI to continue"
 
     rescue CollectorError
       log_to_all "Signing file collection failed. Aborting"
