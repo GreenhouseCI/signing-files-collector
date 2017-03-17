@@ -21,9 +21,13 @@ class CodesigningIdentity
 
   def parse_subject
     subj = self.class.openssl_to_utf8(@cert.subject)
-    @common_name = subj.scan(/CN = ([^,]+), /).first().first()
-    @team_identifier = subj.scan(/OU = ([^,]+), /).first().first()
-    @team_name = subj.scan(/O = ([^,]+), /).first().first()
+    subj_parts = subj.split(/(?:,\s)?([A-Z]+)\s+=\s+/)[1..-1] || []
+    subj_parts = subj_parts.map { |part| part.gsub(/\A["']|["']\Z/, '') }
+    subj_hash = Hash[*subj_parts]
+
+    @common_name = subj_hash['CN']
+    @team_identifier = subj_hash['OU']
+    @team_name = subj_hash['O']
   end
 
   def useful?
