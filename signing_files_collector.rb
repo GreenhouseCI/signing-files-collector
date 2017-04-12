@@ -36,13 +36,14 @@ class SigningFilesCollector
       log_to_all "Starting to upload signing files to Nevercode"
       upload_signing_files
       $stdout_logger.info "Please return to Nevercode UI to continue"
-
-    rescue CollectorError
+    rescue Exception => e
       log_to_all "Signing file collection failed. Aborting"
+      $file_logger.error e.message
+      $file_logger.error e.backtrace
       if File.exist?(@log_file_path)
         $stdout_logger.info "You can find the debug log at #{@log_file_path}"
         $stdout_logger.info "Please attach it when opening a support ticket"
-      end
+    end
     ensure
       log_to_all "Uploading logs to Nevercode"
       upload_log
