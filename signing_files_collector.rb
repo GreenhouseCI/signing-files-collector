@@ -61,18 +61,18 @@ private
       @codesigning_identities.each { |csid|
         if profile.serials.include? csid.serial
           profile_matched = true
-          $file_logger.debug "Codesigning id #{csid} matches #{profile}"
+          $file_logger.debug "Codesigning id '#{csid}' matches '#{profile}'"
           referenced_codesigning_ids.add csid
           referenced_provisioning_profiles.add profile
         end
       }
       if not profile_matched
-        $file_logger.debug "Provisioning profile #{profile} did not match any codesigning identity"
+        $file_logger.debug "Provisioning profile '#{profile}' did not match any codesigning identity"
       end
     }
     @codesigning_identities.each { |csid|
       if not referenced_codesigning_ids.include? csid
-        $file_logger.debug "Codesigning identity #{csid} did not match any provisioning profile"
+        $file_logger.debug "Codesigning identity '#{csid}' did not match any provisioning profile"
       end
     }
     @provisioning_profiles = referenced_provisioning_profiles.to_a

@@ -71,7 +71,7 @@ class CodesigningIdentity
   end
 
   def to_s
-    @ref
+    "#{@ref} [#{serial}]"
   end
 
   def ==(other)
