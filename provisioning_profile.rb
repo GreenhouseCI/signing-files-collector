@@ -98,7 +98,7 @@ class ProvisioningProfile
   end
 
   def to_s
-    @parsed_data["Name"]
+    "#{@parsed_data['Name']} [#{@parsed_data['UUID']}]"
   end
 
   def ==(other)
