@@ -195,7 +195,6 @@ private
       post_body = []
       post_body << "--#{boundary}\r\n"
       post_body << "Content-Disposition: form-data; name=\"archive\"; filename=\"#{File.basename(file_name)}\"\r\n"
-      post_body << "Content-Type: text/plain\r\n"
       post_body << "\r\n"
       post_body << File.read(file_name)
       post_body << "\r\n--#{boundary}--\r\n"
@@ -241,7 +240,7 @@ end
 SIGNING_FILES_COLLECTION_URL = ARGV[0]
 UPLOAD_KEY = ARGV[1]
 
-OBJECT_LENGTH_LIMIT = 1000000
+OBJECT_LENGTH_LIMIT = 1000
 
 log_basename = File.join(Dir.tmpdir(), 'nevercode-signing-files-collector-log-')
 log_file_path = Dir::Tmpname.make_tmpname(log_basename, '.log')
