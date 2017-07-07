@@ -96,6 +96,8 @@ private
 
       signing_files = @upload_object[:certificates].map { |cert| cert[:subject] }
       signing_files += @upload_object[:provisioning_profiles].map { |profile| profile[:name]}
+      $file_logger.debug "Number of certificates for upload: #{@upload_object[:certificates].size}"
+      $file_logger.debug "Nuber of provisioning profiles for upload: #{@upload_object[:provisioning_profiles].size}"
       $file_logger.debug "Preparing the following signing files:"
       $file_logger.debug signing_files
 
@@ -186,10 +188,10 @@ private
     end
 
     if json_object.length > OBJECT_LENGTH_LIMIT
-      file_name = "compressed-json-object.gz"
       $file_logger.info "JSON object is too big: #{json_object.length}. Compressing"
+      file_name = "compressed-json-object.gz"
       compressed_json_object = gzip(json_object, file_name)
-      $file_logger.info "Compressed file size: #{File.stat(compressed_json_object).size}"
+      $file_logger.info "Compressed file size: #{File.stat(compressed_json_object).size.to_f / 2 ** 20} Mb"
 
       boundary = 'AaB03x'
       post_body = []
@@ -240,7 +242,7 @@ end
 SIGNING_FILES_COLLECTION_URL = ARGV[0]
 UPLOAD_KEY = ARGV[1]
 
-OBJECT_LENGTH_LIMIT = 1000
+OBJECT_LENGTH_LIMIT = 2500000 # ~ 50 provisioning profiles and 5 certificates
 
 log_basename = File.join(Dir.tmpdir(), 'nevercode-signing-files-collector-log-')
 log_file_path = Dir::Tmpname.make_tmpname(log_basename, '.log')
