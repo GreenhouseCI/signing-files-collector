@@ -189,6 +189,7 @@ private
       rescue StandardError => err
         $file_logger.error "Failed to gzip json object: #{err.message}"
         raise CollectorError
+      end
     end
 
     if json_object.length > OBJECT_LENGTH_LIMIT
