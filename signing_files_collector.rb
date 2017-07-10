@@ -180,11 +180,15 @@ private
 
   def attach_object(request, json_object)
     def gzip(json_object, file_name)
-      wio = File.new(file_name, "w")
-      w_gz = Zlib::GzipWriter.new(wio)
-      w_gz.write(json_object)
-      w_gz.close
-      wio
+      begin
+        wio = File.new(file_name, "w")
+        w_gz = Zlib::GzipWriter.new(wio)
+        w_gz.write(json_object)
+        w_gz.close
+        wio
+      rescue StandardError => err
+        $file_logger.error "Failed to gzip json object: #{err.message}"
+        raise CollectorError
     end
 
     if json_object.length > OBJECT_LENGTH_LIMIT
