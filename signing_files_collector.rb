@@ -7,6 +7,7 @@ require "open3"
 require "set"
 require "tempfile"
 require "uri"
+require "zlib"
 
 require "./codesigning_identities_collector.rb"
 require "./collector_errors.rb"
@@ -95,6 +96,8 @@ private
 
       signing_files = @upload_object[:certificates].map { |cert| cert[:subject] }
       signing_files += @upload_object[:provisioning_profiles].map { |profile| profile[:name]}
+      $file_logger.debug "Number of certificates for upload: #{@upload_object[:certificates].size}"
+      $file_logger.debug "Nuber of provisioning profiles for upload: #{@upload_object[:provisioning_profiles].size}"
       $file_logger.debug "Preparing the following signing files:"
       $file_logger.debug signing_files
 
@@ -175,6 +178,44 @@ private
     end
   end
 
+  def attach_object(request, json_object)
+    def gzip(json_object, file_name)
+      begin
+        wio = File.new(file_name, "w")
+        w_gz = Zlib::GzipWriter.new(wio)
+        w_gz.write(json_object)
+        w_gz.close
+        wio
+      rescue StandardError => err
+        $file_logger.error "Failed to gzip json object: #{err.message}"
+        raise CollectorError
+      end
+    end
+
+    if json_object.length > OBJECT_LENGTH_LIMIT
+      $file_logger.info "JSON object is too big: #{json_object.length}. Compressing"
+      file_name = "compressed-json-object.gz"
+      compressed_json_object = gzip(json_object, file_name)
+      $file_logger.info "Compressed file size: #{File.stat(compressed_json_object).size.to_f / 2 ** 20} Mb"
+
+      boundary = 'AaB03x'
+      post_body = []
+      post_body << "--#{boundary}\r\n"
+      post_body << "Content-Disposition: form-data; name=\"archive\"; filename=\"#{File.basename(file_name)}\"\r\n"
+      post_body << "\r\n"
+      post_body << File.read(file_name)
+      post_body << "\r\n--#{boundary}--\r\n"
+
+      request['Content-Type'] = "multipart/form-data; boundary=#{boundary}"
+      request.body = post_body.join
+      request
+    else
+      request['Content-Type'] = 'application/json'
+      request.body = json_object
+      request
+    end
+  end
+
   def upload_signing_files
     files_url = "#{SIGNING_FILES_COLLECTION_URL}/#{@signing_files_collection_id}/files/"
     $file_logger.debug "Sending signing files to #{files_url}"
@@ -184,9 +225,8 @@ private
       http.use_ssl = url.scheme == 'https'
 
       request = Net::HTTP::Post.new(url)
-      request['Content-Type'] = 'application/json'
       request['Authorization'] = UPLOAD_KEY
-      request.body = @json_object
+      request = attach_object(request, @json_object)
 
       response = http.request(request)
       $file_logger.debug response.body
@@ -206,6 +246,8 @@ end
 
 SIGNING_FILES_COLLECTION_URL = ARGV[0]
 UPLOAD_KEY = ARGV[1]
+
+OBJECT_LENGTH_LIMIT = 2500000 # ~ 50 provisioning profiles and 5 certificates
 
 log_basename = File.join(Dir.tmpdir(), 'nevercode-signing-files-collector-log-')
 log_file_path = Dir::Tmpname.make_tmpname(log_basename, '.log')
