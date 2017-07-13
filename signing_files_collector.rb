@@ -222,6 +222,7 @@ private
     begin
       url = URI(files_url)
       http = Net::HTTP.new(url.host, url.port)
+      http.read_timeout = 300
       http.use_ssl = url.scheme == 'https'
 
       request = Net::HTTP::Post.new(url)
