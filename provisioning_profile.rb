@@ -12,21 +12,17 @@ class ProvisioningProfile
   end
 
   def read
-    if @parsed_data.any?
-      return @parsed_data
+    return @parsed_data if @parsed_data.any?
 
-    end
-    cmd = ["security", "cms", "-D", "-i", @file_path]
+    cmd = ['security', 'cms', '-D', '-i', @file_path]
     begin
-      Open3.popen3(*cmd) do |stdin, stdout, stderr, wait_thr|
-        exit_status = wait_thr.value
-        if not exit_status.success?
-          $file_logger.error "Error while reading provisioning profile: #{stderr.read}"
-          raise CollectorError
-        end
-        @parsed_data = Plist::parse_xml(stdout.read.chomp)
-        return @parsed_data
+      stdout_and_stderr, exit_status = Open3.capture2e(*cmd)
+      unless exit_status.success?
+        $file_logger.error "Error while reading provisioning profile: #{stdout_and_stderr}"
+        raise CollectorError
       end
+      @parsed_data = Plist::parse_xml(stdout_and_stderr)
+      return @parsed_data
     rescue StandardError => err
       $file_logger.error "Failed to read provisioning profile #{@file_path}: #{err.message}"
       raise CollectorError
