@@ -250,7 +250,7 @@ UPLOAD_KEY = ARGV[1]
 
 OBJECT_LENGTH_LIMIT = 2500000 # ~ 50 provisioning profiles and 5 certificates
 
-log_file_path = Tempfile.create(%w"nevercode-signing-files-collector-log- .log", Dir.tmpdir)
+log_file_path = Tempfile.create(%w"nevercode-signing-files-collector-log- .log", Dir.tmpdir).path
 
 $file_logger = Logger.new log_file_path
 $file_logger.level = Logger::DEBUG
