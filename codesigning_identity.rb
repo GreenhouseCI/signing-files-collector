@@ -1,6 +1,6 @@
 class CodesigningIdentity
-  IPHONE_DEVELOPER_DESCRIPTOR = "iPhone Developer"
-  IPHONE_DISTRIBUTION_DESCRIPTOR = "iPhone Distribution"
+  IPHONE_DEVELOPER_DESCRIPTOR = "(iPhone Developer|Apple Development)"
+  IPHONE_DISTRIBUTION_DESCRIPTOR = "(iPhone Distribution|Apple Distribution)"
   ASN1_STRFLGS_ESC_MSB = 4
 
   def initialize(data)
